@@ -22,7 +22,7 @@ int main(int, char**)
     //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;   // Enable Gamepad Controls
 
     // Setup style
-    ImGui::StyleColorsDark();
+    //ImGui::StyleColorsDark();
     //ImGui::StyleColorsClassic();
 
     // Load Fonts

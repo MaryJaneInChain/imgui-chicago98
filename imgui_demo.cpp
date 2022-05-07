@@ -6079,13 +6079,15 @@ void ImGui::ShowFontSelector(const char* label)
 bool ImGui::ShowStyleSelector(const char* label)
 {
     static int style_idx = -1;
-    if (ImGui::Combo(label, &style_idx, "Dark\0Light\0Classic\0"))
+    // if (ImGui::Combo(label, &style_idx, "Dark\0Light\0Classic\0"))
+    if (ImGui::Combo(label, &style_idx, "Chicago98\0"))
     {
         switch (style_idx)
         {
-        case 0: ImGui::StyleColorsDark(); break;
-        case 1: ImGui::StyleColorsLight(); break;
-        case 2: ImGui::StyleColorsClassic(); break;
+        // case 0: ImGui::StyleColorsDark(); break;
+        // case 1: ImGui::StyleColorsLight(); break;
+        // case 2: ImGui::StyleColorsClassic(); break;
+        case 0: ImGui::StyleColorsChicago98(); break;
         }
         return true;
     }
@@ -6151,7 +6153,7 @@ void ImGui::ShowStyleEditor(ImGuiStyle* ref)
             ImGui::SliderFloat("ScrollbarSize", &style.ScrollbarSize, 1.0f, 20.0f, "%.0f");
             ImGui::SliderFloat("GrabMinSize", &style.GrabMinSize, 1.0f, 20.0f, "%.0f");
             ImGui::Text("Borders");
-            ImGui::SliderFloat("WindowBorderSize", &style.WindowBorderSize, 0.0f, 1.0f, "%.0f");
+            ImGui::SliderFloat("WindowBorderSize", &style.WindowBorderSize, 0.0f, 2.0f, "%.0f");
             ImGui::SliderFloat("ChildBorderSize", &style.ChildBorderSize, 0.0f, 1.0f, "%.0f");
             ImGui::SliderFloat("PopupBorderSize", &style.PopupBorderSize, 0.0f, 1.0f, "%.0f");
             ImGui::SliderFloat("FrameBorderSize", &style.FrameBorderSize, 0.0f, 1.0f, "%.0f");

@@ -306,9 +306,10 @@ namespace ImGui
     IMGUI_API const char*   GetVersion();                               // get the compiled version string e.g. "1.80 WIP" (essentially the value for IMGUI_VERSION from the compiled version of imgui.cpp)
 
     // Styles
-    IMGUI_API void          StyleColorsDark(ImGuiStyle* dst = NULL);    // new, recommended style (default)
-    IMGUI_API void          StyleColorsLight(ImGuiStyle* dst = NULL);   // best used with borders and a custom, thicker font
-    IMGUI_API void          StyleColorsClassic(ImGuiStyle* dst = NULL); // classic imgui style
+    // IMGUI_API void          StyleColorsDark(ImGuiStyle* dst = NULL);    // new, recommended style
+    // IMGUI_API void          StyleColorsLight(ImGuiStyle* dst = NULL);   // best used with borders and a custom, thicker font
+    // IMGUI_API void          StyleColorsClassic(ImGuiStyle* dst = NULL); // classic imgui style
+    IMGUI_API void          StyleColorsChicago98(ImGuiStyle* dst = NULL); // windows 98 style (default)
 
     // Windows
     // - Begin() = push window to the stack and start appending to it. End() = pop window from the stack.
@@ -973,7 +974,7 @@ enum ImGuiWindowFlags_
     ImGuiWindowFlags_Tooltip                = 1 << 25,  // Don't use! For internal use by BeginTooltip()
     ImGuiWindowFlags_Popup                  = 1 << 26,  // Don't use! For internal use by BeginPopup()
     ImGuiWindowFlags_Modal                  = 1 << 27,  // Don't use! For internal use by BeginPopupModal()
-    ImGuiWindowFlags_ChildMenu              = 1 << 28   // Don't use! For internal use by BeginMenu()
+    ImGuiWindowFlags_ChildMenu              = 1 << 28,  // Don't use! For internal use by BeginMenu()
     //ImGuiWindowFlags_ResizeFromAnySide    = 1 << 17,  // [Obsolete] --> Set io.ConfigWindowsResizeFromEdges=true and make sure mouse cursors are supported by backend (io.BackendFlags & ImGuiBackendFlags_HasMouseCursors)
 };
 
@@ -1578,6 +1579,20 @@ enum ImGuiCol_
     ImGuiCol_NavWindowingHighlight, // Highlight window when using CTRL+TAB
     ImGuiCol_NavWindowingDimBg,     // Darken/colorize entire screen behind the CTRL+TAB window list, when active
     ImGuiCol_ModalWindowDimBg,      // Darken/colorize entire screen behind a modal window, when one is active
+    ImGuiCol_ChicagoFrameTopLeft,
+    ImGuiCol_ChicagoFrameButtomRight,
+    ImGuiCol_ChicagoFrameTopLeftInner,
+    ImGuiCol_ChicagoFrameButtomRightInner,
+    ImGuiCol_ChicagoTitleBgLeft,
+    ImGuiCol_ChicagoTitleBgRight,
+    ImGuiCol_ChicagoTitleBgActiveLeft,
+    ImGuiCol_ChicagoTitleBgActiveRight,
+    ImGuiCol_ChicagoTitleText,
+    ImGuiCol_ChicagoTitleTextActive,
+    ImGuiCol_TooltipBg,
+    ImGuiCol_TooltipBorder,
+    ImGuiCol_ChicagoSeparatorUp,
+    ImGuiCol_ChicagoSeparatorDown,
     ImGuiCol_COUNT
 };
 
@@ -2559,6 +2574,9 @@ struct ImDrawList
     IMGUI_API void  AddImage(ImTextureID user_texture_id, const ImVec2& p_min, const ImVec2& p_max, const ImVec2& uv_min = ImVec2(0, 0), const ImVec2& uv_max = ImVec2(1, 1), ImU32 col = IM_COL32_WHITE);
     IMGUI_API void  AddImageQuad(ImTextureID user_texture_id, const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, const ImVec2& uv1 = ImVec2(0, 0), const ImVec2& uv2 = ImVec2(1, 0), const ImVec2& uv3 = ImVec2(1, 1), const ImVec2& uv4 = ImVec2(0, 1), ImU32 col = IM_COL32_WHITE);
     IMGUI_API void  AddImageRounded(ImTextureID user_texture_id, const ImVec2& p_min, const ImVec2& p_max, const ImVec2& uv_min, const ImVec2& uv_max, ImU32 col, float rounding, ImDrawFlags flags = 0);
+
+    IMGUI_API void  AddChicagoRect(const ImVec2& p_min, const ImVec2& p_max, ImDrawFlags flags = 0, bool filled = false);
+    IMGUI_API void  AddChicagoRectInner(const ImVec2& p_min, const ImVec2& p_max, ImDrawFlags flags = 0, bool filled = false);
 
     // Stateful path API, add points then finish with PathFillConvex() or PathStroke()
     inline    void  PathClear()                                                 { _Path.Size = 0; }

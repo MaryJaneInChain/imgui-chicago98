@@ -75,7 +75,7 @@ void init(struct android_app* app)
     io.IniFilename = NULL;
 
     // Setup Dear ImGui style
-    ImGui::StyleColorsDark();
+    //ImGui::StyleColorsDark();
     //ImGui::StyleColorsClassic();
 
     // Setup Platform/Renderer backends

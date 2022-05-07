@@ -48,7 +48,7 @@ int main(int, char**)
     //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 
     // Setup Dear ImGui style
-    ImGui::StyleColorsDark();
+    //ImGui::StyleColorsDark();
     //ImGui::StyleColorsClassic();
 
     // Setup Platform/Renderer backends
@@ -69,6 +69,9 @@ int main(int, char**)
     //io.Fonts->AddFontFromFileTTF("../../misc/fonts/ProggyTiny.ttf", 10.0f);
     //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
     //IM_ASSERT(font != NULL);
+    io.Fonts->AddFontFromFileTTF("../NotoSansCJK-Regular.ttc", 16.0f, NULL, io.Fonts->GetGlyphRangesChineseFull());
+    io.Fonts->AddFontFromFileTTF("../NotoSansCJK-Bold.ttc", 16.0f, NULL, io.Fonts->GetGlyphRangesChineseFull());
+    io.Fonts->Build();
 
     // Our state
     bool show_demo_window = true;

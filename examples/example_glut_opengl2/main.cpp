@@ -121,7 +121,7 @@ int main(int argc, char** argv)
     //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
 
     // Setup Dear ImGui style
-    ImGui::StyleColorsDark();
+    //ImGui::StyleColorsDark();
     //ImGui::StyleColorsClassic();
 
     // Setup Platform/Renderer backends

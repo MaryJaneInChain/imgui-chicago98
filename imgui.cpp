@@ -973,6 +973,7 @@ static void             UpdateMouseInputs();
 static void             UpdateMouseWheel();
 static bool             UpdateWindowManualResize(ImGuiWindow* window, const ImVec2& size_auto_fit, int* border_held, int resize_grip_count, ImU32 resize_grip_col[4], const ImRect& visibility_rect);
 static void             RenderWindowOuterBorders(ImGuiWindow* window);
+static void             RenderTooltipOuterBorders(ImGuiWindow* window);
 static void             RenderWindowDecorations(ImGuiWindow* window, const ImRect& title_bar_rect, bool title_bar_is_highlight, int resize_grip_count, const ImU32 resize_grip_col[4], float resize_grip_draw_size);
 static void             RenderWindowTitleBarContents(ImGuiWindow* window, const ImRect& title_bar_rect, const char* name, bool* p_open);
 static void             RenderDimmedBackgroundBehindWindow(ImGuiWindow* window, ImU32 col);
@@ -1036,30 +1037,30 @@ ImGuiStyle::ImGuiStyle()
     DisabledAlpha           = 0.60f;            // Additional alpha multiplier applied by BeginDisabled(). Multiply over current value of Alpha.
     WindowPadding           = ImVec2(8,8);      // Padding within a window
     WindowRounding          = 0.0f;             // Radius of window corners rounding. Set to 0.0f to have rectangular windows. Large values tend to lead to variety of artifacts and are not recommended.
-    WindowBorderSize        = 1.0f;             // Thickness of border around windows. Generally set to 0.0f or 1.0f. Other values not well tested.
+    WindowBorderSize        = 2.0f;             // Thickness of border around windows. Generally set to 0.0f or 1.0f. Other values not well tested.
     WindowMinSize           = ImVec2(32,32);    // Minimum window size
     WindowTitleAlign        = ImVec2(0.0f,0.5f);// Alignment for title bar text
-    WindowMenuButtonPosition= ImGuiDir_Left;    // Position of the collapsing/docking button in the title bar (left/right). Defaults to ImGuiDir_Left.
+    WindowMenuButtonPosition= ImGuiDir_Right;    // Position of the collapsing/docking button in the title bar (left/right). Defaults to ImGuiDir_Left.
     ChildRounding           = 0.0f;             // Radius of child window corners rounding. Set to 0.0f to have rectangular child windows
     ChildBorderSize         = 1.0f;             // Thickness of border around child windows. Generally set to 0.0f or 1.0f. Other values not well tested.
     PopupRounding           = 0.0f;             // Radius of popup window corners rounding. Set to 0.0f to have rectangular child windows
     PopupBorderSize         = 1.0f;             // Thickness of border around popup or tooltip windows. Generally set to 0.0f or 1.0f. Other values not well tested.
     FramePadding            = ImVec2(4,3);      // Padding within a framed rectangle (used by most widgets)
     FrameRounding           = 0.0f;             // Radius of frame corners rounding. Set to 0.0f to have rectangular frames (used by most widgets).
-    FrameBorderSize         = 0.0f;             // Thickness of border around frames. Generally set to 0.0f or 1.0f. Other values not well tested.
+    FrameBorderSize         = 1.0f;             // Thickness of border around frames. Generally set to 0.0f or 1.0f. Other values not well tested.
     ItemSpacing             = ImVec2(8,4);      // Horizontal and vertical spacing between widgets/lines
     ItemInnerSpacing        = ImVec2(4,4);      // Horizontal and vertical spacing between within elements of a composed widget (e.g. a slider and its label)
     CellPadding             = ImVec2(4,2);      // Padding within a table cell
     TouchExtraPadding       = ImVec2(0,0);      // Expand reactive bounding box for touch-based system where touch position is not accurate enough. Unfortunately we don't sort widgets so priority on overlap will always be given to the first widget. So don't grow this too much!
     IndentSpacing           = 21.0f;            // Horizontal spacing when e.g. entering a tree node. Generally == (FontSize + FramePadding.x*2).
     ColumnsMinSpacing       = 6.0f;             // Minimum horizontal spacing between two columns. Preferably > (FramePadding.x + 1).
-    ScrollbarSize           = 14.0f;            // Width of the vertical scrollbar, Height of the horizontal scrollbar
+    ScrollbarSize           = 16.0f;            // Width of the vertical scrollbar, Height of the horizontal scrollbar
     ScrollbarRounding       = 9.0f;             // Radius of grab corners rounding for scrollbar
     GrabMinSize             = 10.0f;            // Minimum width/height of a grab box for slider/scrollbar
     GrabRounding            = 0.0f;             // Radius of grabs corners rounding. Set to 0.0f to have rectangular slider grabs.
     LogSliderDeadzone       = 4.0f;             // The size in pixels of the dead-zone around zero on logarithmic sliders that cross zero.
-    TabRounding             = 4.0f;             // Radius of upper corners of a tab. Set to 0.0f to have rectangular tabs.
-    TabBorderSize           = 0.0f;             // Thickness of border around tabs.
+    TabRounding             = 1.0f;             // Radius of upper corners of a tab. Set to 0.0f to have rectangular tabs.
+    TabBorderSize           = 1.0f;             // Thickness of border around tabs.
     TabMinWidthForCloseButton = 0.0f;           // Minimum width for close button to appears on an unselected tab when hovered. Set to 0.0f to always show when hovering, set to FLT_MAX to never show close button unless selected.
     ColorButtonPosition     = ImGuiDir_Right;   // Side of the color button in the ColorEdit4 widget (left/right). Defaults to ImGuiDir_Right.
     ButtonTextAlign         = ImVec2(0.5f,0.5f);// Alignment of button text when button is larger than text.
@@ -1074,7 +1075,7 @@ ImGuiStyle::ImGuiStyle()
     CircleTessellationMaxError = 0.30f;         // Maximum error (in pixels) allowed when using AddCircle()/AddCircleFilled() or drawing rounded corner rectangles with no explicit segment count specified. Decrease for higher quality but more geometry.
 
     // Default theme
-    ImGui::StyleColorsDark(this);
+    ImGui::StyleColorsChicago98(this);
 }
 
 // To scale your entire UI (e.g. if you want your app to use High DPI or generally be DPI aware) you may use this helper function. Scaling the fonts is done separately and is up to you.
@@ -2942,6 +2943,20 @@ const char* ImGui::GetStyleColorName(ImGuiCol idx)
     case ImGuiCol_NavWindowingHighlight: return "NavWindowingHighlight";
     case ImGuiCol_NavWindowingDimBg: return "NavWindowingDimBg";
     case ImGuiCol_ModalWindowDimBg: return "ModalWindowDimBg";
+    case ImGuiCol_ChicagoFrameTopLeft: return "ChicagoFrameTopLeft";
+    case ImGuiCol_ChicagoFrameButtomRight: return "ChicagoFrameButtomRight";
+    case ImGuiCol_ChicagoFrameTopLeftInner: return "ChicagoFrameTopLeftInner";
+    case ImGuiCol_ChicagoFrameButtomRightInner: return "ChicagoFrameButtomRightInner";
+    case ImGuiCol_ChicagoTitleBgLeft: return "ChicagoTitleBgLeft";
+    case ImGuiCol_ChicagoTitleBgRight: return "ChicagoTitleBgRight";
+    case ImGuiCol_ChicagoTitleBgActiveLeft: return "ChicagoTitleBgActiveLeft";
+    case ImGuiCol_ChicagoTitleBgActiveRight: return "ChicagoTitleBgActiveRight";
+    case ImGuiCol_ChicagoTitleText: return "ChicagoTitleText";
+    case ImGuiCol_ChicagoTitleTextActive: return "ChicagoTitleTextActive";
+    case ImGuiCol_TooltipBg: return "TooltipBg";
+    case ImGuiCol_TooltipBorder: return "TooltipBorder";
+    case ImGuiCol_ChicagoSeparatorUp: return "ChicagoSeparatorUp";
+    case ImGuiCol_ChicagoSeparatorDown: return "ChicagoSeparatorDown";
     }
     IM_ASSERT(0);
     return "Unknown";
@@ -3055,6 +3070,50 @@ void ImGui::RenderTextClipped(const ImVec2& pos_min, const ImVec2& pos_max, cons
         LogRenderedText(&pos_min, text, text_display_end);
 }
 
+void ImGui::RenderTitleTextClippedEx(ImDrawList* draw_list, const ImVec2& pos_min, const ImVec2& pos_max, const char* text, const char* text_display_end, const ImVec2* text_size_if_known, const ImVec2& align, const ImRect* clip_rect, const bool active)
+{
+    // Perform CPU side clipping for single clipped element to avoid using scissor state
+    ImVec2 pos = pos_min;
+    const ImVec2 text_size = text_size_if_known ? *text_size_if_known : CalcTextSize(text, text_display_end, false, 0.0f);
+
+    const ImVec2* clip_min = clip_rect ? &clip_rect->Min : &pos_min;
+    const ImVec2* clip_max = clip_rect ? &clip_rect->Max : &pos_max;
+    bool need_clipping = (pos.x + text_size.x >= clip_max->x) || (pos.y + text_size.y >= clip_max->y);
+    if (clip_rect) // If we had no explicit clipping rectangle then pos==clip_min
+        need_clipping |= (pos.x < clip_min->x) || (pos.y < clip_min->y);
+
+    // Align whole block. We should defer that to the better rendering function when we'll have support for individual line alignment.
+    if (align.x > 0.0f) pos.x = ImMax(pos.x, pos.x + (pos_max.x - pos.x - text_size.x) * align.x);
+    if (align.y > 0.0f) pos.y = ImMax(pos.y, pos.y + (pos_max.y - pos.y - text_size.y) * align.y);
+
+    // Render
+    const int col_index = active ? ImGuiCol_ChicagoTitleTextActive : ImGuiCol_ChicagoTitleText;
+    if (need_clipping)
+    {
+        ImVec4 fine_clip_rect(clip_min->x, clip_min->y, clip_max->x, clip_max->y);
+        draw_list->AddText(NULL, 0.0f, pos, GetColorU32(col_index), text, text_display_end, 0.0f, &fine_clip_rect);
+    }
+    else
+    {
+        draw_list->AddText(NULL, 0.0f, pos, GetColorU32(col_index), text, text_display_end, 0.0f, NULL);
+    }
+}
+
+void ImGui::RenderTitleTextClipped(const ImVec2& pos_min, const ImVec2& pos_max, const char* text, const char* text_end, const ImVec2* text_size_if_known, const ImVec2& align, const ImRect* clip_rect, const bool active)
+{
+    // Hide anything after a '##' string
+    const char* text_display_end = FindRenderedTextEnd(text, text_end);
+    const int text_len = (int)(text_display_end - text);
+    if (text_len == 0)
+        return;
+
+    ImGuiContext& g = *GImGui;
+    ImGuiWindow* window = g.CurrentWindow;
+    RenderTitleTextClippedEx(window->DrawList, pos_min, pos_max, text, text_display_end, text_size_if_known, align, clip_rect, active);
+    if (g.LogEnabled)
+        LogRenderedText(&pos_min, text, text_display_end);
+}
+
 
 // Another overly complex function until we reorganize everything into a nice all-in-one helper.
 // This is made more complex because we have dissociated the layout rectangle (pos_min..pos_max) which define _where_ the ellipsis is, from actual clipping of text and limit of the ellipsis display.
@@ -3145,8 +3204,16 @@ void ImGui::RenderFrame(ImVec2 p_min, ImVec2 p_max, ImU32 fill_col, bool border,
     const float border_size = g.Style.FrameBorderSize;
     if (border && border_size > 0.0f)
     {
+        /*
         window->DrawList->AddRect(p_min + ImVec2(1, 1), p_max + ImVec2(1, 1), GetColorU32(ImGuiCol_BorderShadow), rounding, 0, border_size);
         window->DrawList->AddRect(p_min, p_max, GetColorU32(ImGuiCol_Border), rounding, 0, border_size);
+        */
+
+        if (window->Collapsed)
+            // For showing collapsed window title bar correctly
+            window->DrawList->AddChicagoRect(p_min, p_max + ImVec2(0.0f, 2.0f));
+        else
+            window->DrawList->AddChicagoRectInner(p_min, p_max);
     }
 }
 
@@ -5721,9 +5788,10 @@ static inline void ClampWindowRect(ImGuiWindow* window, const ImRect& visibility
 
 static void ImGui::RenderWindowOuterBorders(ImGuiWindow* window)
 {
-    ImGuiContext& g = *GImGui;
-    float rounding = window->WindowRounding;
+    // ImGuiContext& g = *GImGui;
+    // float rounding = window->WindowRounding;
     float border_size = window->WindowBorderSize;
+    /*
     if (border_size > 0.0f && !(window->Flags & ImGuiWindowFlags_NoBackground))
         window->DrawList->AddRect(window->Pos, window->Pos + window->Size, GetColorU32(ImGuiCol_Border), rounding, 0, border_size);
 
@@ -5740,6 +5808,19 @@ static void ImGui::RenderWindowOuterBorders(ImGuiWindow* window)
     {
         float y = window->Pos.y + window->TitleBarHeight() - 1;
         window->DrawList->AddLine(ImVec2(window->Pos.x + border_size, y), ImVec2(window->Pos.x + window->Size.x - border_size, y), GetColorU32(ImGuiCol_Border), g.Style.FrameBorderSize);
+    }
+    */
+
+    if (border_size > 0.0f && (window->Flags & ImGuiWindowFlags_Tooltip))
+    {
+        window->DrawList->AddRect(window->Pos, window->Pos + window->Size, GetColorU32(ImGuiCol_TooltipBorder), 0, 0, border_size);
+    }
+    else if (border_size > 0.0f && !(window->Flags & ImGuiWindowFlags_NoBackground))
+    {
+        if ((window->Flags & ImGuiWindowFlags_ChildWindow) && !(window->Flags & ImGuiWindowFlags_Popup))
+            window->DrawList->AddChicagoRectInner(window->Pos, window->Pos + window->Size);
+        else
+            window->DrawList->AddChicagoRect(window->Pos, window->Pos + window->Size);
     }
 }
 
@@ -5774,6 +5855,11 @@ void ImGui::RenderWindowDecorations(ImGuiWindow* window, const ImRect& title_bar
         if (!(flags & ImGuiWindowFlags_NoBackground))
         {
             ImU32 bg_col = GetColorU32(GetWindowBgColorIdx(window));
+            if (flags & ImGuiWindowFlags_Tooltip)
+            {
+                // Windows style tooltip
+                bg_col = GetColorU32(ImGuiCol_TooltipBg);
+            }
             bool override_alpha = false;
             float alpha = 1.0f;
             if (g.NextWindowData.Flags & ImGuiNextWindowDataFlags_HasBgAlpha)
@@ -5800,7 +5886,10 @@ void ImGui::RenderWindowDecorations(ImGuiWindow* window, const ImRect& title_bar
             menu_bar_rect.ClipWith(window->Rect());  // Soft clipping, in particular child window don't have minimum size covering the menu bar so this is useful for them.
             window->DrawList->AddRectFilled(menu_bar_rect.Min + ImVec2(window_border_size, 0), menu_bar_rect.Max - ImVec2(window_border_size, 0), GetColorU32(ImGuiCol_MenuBarBg), (flags & ImGuiWindowFlags_NoTitleBar) ? window_rounding : 0.0f, ImDrawFlags_RoundCornersTop);
             if (style.FrameBorderSize > 0.0f && menu_bar_rect.Max.y < window->Pos.y + window->Size.y)
-                window->DrawList->AddLine(menu_bar_rect.GetBL(), menu_bar_rect.GetBR(), GetColorU32(ImGuiCol_Border), style.FrameBorderSize);
+            {
+                window->DrawList->AddLine(menu_bar_rect.GetBL(), menu_bar_rect.GetBR(), GetColorU32(ImGuiCol_ChicagoSeparatorUp), style.FrameBorderSize);
+                window->DrawList->AddLine(menu_bar_rect.GetBL() + ImVec2(0.0f, 1.0f), menu_bar_rect.GetBR() + ImVec2(0.0f, 1.0f), GetColorU32(ImGuiCol_ChicagoSeparatorDown), style.FrameBorderSize);
+            }
         }
 
         // Scrollbars
@@ -5848,23 +5937,39 @@ void ImGui::RenderWindowTitleBarContents(ImGuiWindow* window, const ImRect& titl
     // FIXME: Would be nice to generalize the subtleties expressed here into reusable code.
     float pad_l = style.FramePadding.x;
     float pad_r = style.FramePadding.x;
-    float button_sz = g.FontSize;
+    // float button_sz = g.FontSize;
+    float button_sz = 16.0f;
     ImVec2 close_button_pos;
     ImVec2 collapse_button_pos;
     if (has_close_button)
     {
         pad_r += button_sz;
-        close_button_pos = ImVec2(title_bar_rect.Max.x - pad_r - style.FramePadding.x, title_bar_rect.Min.y);
+        // close_button_pos = ImVec2(title_bar_rect.Max.x - pad_r - style.FramePadding.x, title_bar_rect.Min.y) + ImVec2(0.0f, 2.0f);
+        close_button_pos = ImVec2(title_bar_rect.Max.x - pad_r, title_bar_rect.Min.y) + ImVec2(0.0f, 2.0f);
+        // close_button_pos = ImVec2(title_bar_rect.Max.x - 18.0f, title_bar_rect.Min.y + 2.0f);
     }
     if (has_collapse_button && style.WindowMenuButtonPosition == ImGuiDir_Right)
     {
         pad_r += button_sz;
-        collapse_button_pos = ImVec2(title_bar_rect.Max.x - pad_r - style.FramePadding.x, title_bar_rect.Min.y);
+        // collapse_button_pos = ImVec2(title_bar_rect.Max.x - pad_r - style.FramePadding.x, title_bar_rect.Min.y) + ImVec2(0.0f, 2.0f);
+        collapse_button_pos = ImVec2(title_bar_rect.Max.x - pad_r, title_bar_rect.Min.y) + ImVec2(0.0f, 2.0f);
+        // collapse_button_pos = ImVec2(title_bar_rect.Max.x - 34.0f, title_bar_rect.Min.y + 2.0f);
     }
     if (has_collapse_button && style.WindowMenuButtonPosition == ImGuiDir_Left)
     {
-        collapse_button_pos = ImVec2(title_bar_rect.Min.x + pad_l - style.FramePadding.x, title_bar_rect.Min.y);
+        // collapse_button_pos = ImVec2(title_bar_rect.Min.x + pad_l - style.FramePadding.x, title_bar_rect.Min.y) + ImVec2(0.0f, 2.0f);
+        collapse_button_pos = ImVec2(title_bar_rect.Min.x + pad_l, title_bar_rect.Min.y + 2.0f);
         pad_l += button_sz;
+    }
+
+    bool is_focused = IsWindowFocused(ImGuiFocusedFlags_ChildWindows);
+    if (is_focused)
+    {
+        window->DrawList->AddRectFilledMultiColor(title_bar_rect.Min, title_bar_rect.Max, ImGui::GetColorU32(ImGuiCol_ChicagoTitleBgActiveLeft), ImGui::GetColorU32(ImGuiCol_ChicagoTitleBgActiveRight), ImGui::GetColorU32(ImGuiCol_ChicagoTitleBgActiveRight), ImGui::GetColorU32(ImGuiCol_ChicagoTitleBgActiveLeft));
+    }
+    else
+    {
+        window->DrawList->AddRectFilledMultiColor(title_bar_rect.Min, title_bar_rect.Max, ImGui::GetColorU32(ImGuiCol_ChicagoTitleBgLeft), ImGui::GetColorU32(ImGuiCol_ChicagoTitleBgRight), ImGui::GetColorU32(ImGuiCol_ChicagoTitleBgRight), ImGui::GetColorU32(ImGuiCol_ChicagoTitleBgLeft));
     }
 
     // Collapse button (submitting first so it gets priority when choosing a navigation init fallback)
@@ -5914,7 +6019,14 @@ void ImGui::RenderWindowTitleBarContents(ImGuiWindow* window, const ImRect& titl
     }
     //if (g.IO.KeyShift) window->DrawList->AddRect(layout_r.Min, layout_r.Max, IM_COL32(255, 128, 0, 255)); // [DEBUG]
     //if (g.IO.KeyCtrl) window->DrawList->AddRect(clip_r.Min, clip_r.Max, IM_COL32(255, 128, 0, 255)); // [DEBUG]
-    RenderTextClipped(layout_r.Min, layout_r.Max, name, NULL, &text_size, style.WindowTitleAlign, &clip_r);
+
+    ImGuiIO& io = ImGui::GetIO();
+    ImFont* font = io.Fonts->Fonts[1];
+    PushFont(font);
+    
+    RenderTitleTextClipped(layout_r.Min, layout_r.Max, name, NULL, &text_size, style.WindowTitleAlign, &clip_r, is_focused);
+
+    PopFont();
 }
 
 void ImGui::UpdateWindowParentAndRootLinks(ImGuiWindow* window, ImGuiWindowFlags flags, ImGuiWindow* parent_window)
@@ -6547,7 +6659,7 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
 
         // Title bar
         if (!(flags & ImGuiWindowFlags_NoTitleBar))
-            RenderWindowTitleBarContents(window, ImRect(title_bar_rect.Min.x + window->WindowBorderSize, title_bar_rect.Min.y, title_bar_rect.Max.x - window->WindowBorderSize, title_bar_rect.Max.y), name, p_open);
+            RenderWindowTitleBarContents(window, ImRect(title_bar_rect.Min.x + window->WindowBorderSize, title_bar_rect.Min.y + window->WindowBorderSize, title_bar_rect.Max.x - window->WindowBorderSize, title_bar_rect.Max.y), name, p_open);
 
         // Clear hit test shape every frame
         window->HitTestHoleSize.x = window->HitTestHoleSize.y = 0;

@@ -696,13 +696,22 @@ bool ImGui::ButtonEx(const char* label, const ImVec2& size_arg, ImGuiButtonFlags
     bool pressed = ButtonBehavior(bb, id, &hovered, &held, flags);
 
     // Render
-    const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
-    RenderNavHighlight(bb, id);
-    RenderFrame(bb.Min, bb.Max, col, true, style.FrameRounding);
-
-    if (g.LogEnabled)
-        LogSetNextTextDecoration("[", "]");
-    RenderTextClipped(bb.Min + style.FramePadding, bb.Max - style.FramePadding, label, NULL, &label_size, style.ButtonTextAlign, &bb);
+    if (held && hovered)
+    {
+        window->DrawList->AddRectFilled(bb.Min, bb.Max, GetColorU32(ImGuiCol_ButtonActive), 0.0f);
+        window->DrawList->AddChicagoRectInner(bb.Min, bb.Max);
+        if (g.LogEnabled)
+            LogSetNextTextDecoration("[", "]");
+        RenderTextClipped(bb.Min + style.FramePadding, bb.Max - style.FramePadding, label, NULL, &label_size, style.ButtonTextAlign, &bb);
+    }
+    else
+    {
+        window->DrawList->AddRectFilled(bb.Min, bb.Max, GetColorU32(ImGuiCol_Button), 0.0f);
+        window->DrawList->AddChicagoRect(bb.Min, bb.Max);
+        if (g.LogEnabled)
+            LogSetNextTextDecoration("[", "]");
+        RenderTextClipped(bb.Min + style.FramePadding - ImVec2(0.0f, 1.0f), bb.Max - style.FramePadding - ImVec2(0.0f, 1.0f), label, NULL, &label_size, style.ButtonTextAlign, &bb);
+    }
 
     // Automatically close popups
     //if (pressed && !(flags & ImGuiButtonFlags_DontClosePopups) && (window->Flags & ImGuiWindowFlags_Popup))
@@ -799,7 +808,8 @@ bool ImGui::CloseButton(ImGuiID id, const ImVec2& pos)
 
     // Tweak 1: Shrink hit-testing area if button covers an abnormally large proportion of the visible region. That's in order to facilitate moving the window away. (#3825)
     // This may better be applied as a general hit-rect reduction mechanism for all widgets to ensure the area to move window is always accessible?
-    const ImRect bb(pos, pos + ImVec2(g.FontSize, g.FontSize) + g.Style.FramePadding * 2.0f);
+    // const ImRect bb(pos, pos + ImVec2(g.FontSize, g.FontSize) + g.Style.FramePadding * 2.0f);
+    const ImRect bb(pos, pos + ImVec2(16.0f, 16.0f));
     ImRect bb_interact = bb;
     const float area_to_visible_ratio = window->OuterRectClipped.GetArea() / bb.GetArea();
     if (area_to_visible_ratio < 1.5f)
@@ -816,10 +826,18 @@ bool ImGui::CloseButton(ImGuiID id, const ImVec2& pos)
 
     // Render
     // FIXME: Clarify this mess
-    ImU32 col = GetColorU32(held ? ImGuiCol_ButtonActive : ImGuiCol_ButtonHovered);
+    // ImU32 col = GetColorU32(held ? ImGuiCol_ButtonActive : ImGuiCol_ButtonHovered);
     ImVec2 center = bb.GetCenter();
+
+    /*
     if (hovered)
         window->DrawList->AddCircleFilled(center, ImMax(2.0f, g.FontSize * 0.5f + 1.0f), col, 12);
+    */
+    window->DrawList->AddRectFilled(bb.Min, bb.Max, GetColorU32(ImGuiCol_WindowBg));
+    if (held)
+        window->DrawList->AddChicagoRectInner(bb.Min, bb.Max);
+    else
+        window->DrawList->AddChicagoRect(bb.Min, bb.Max);
 
     float cross_extent = g.FontSize * 0.5f * 0.7071f - 1.0f;
     ImU32 cross_col = GetColorU32(ImGuiCol_Text);
@@ -835,18 +853,26 @@ bool ImGui::CollapseButton(ImGuiID id, const ImVec2& pos)
     ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.CurrentWindow;
 
-    ImRect bb(pos, pos + ImVec2(g.FontSize, g.FontSize) + g.Style.FramePadding * 2.0f);
+    // ImRect bb(pos, pos + ImVec2(g.FontSize, g.FontSize) + g.Style.FramePadding * 2.0f);
+    ImRect bb(pos, pos + ImVec2(16.0f, 16.0f));
     ItemAdd(bb, id);
     bool hovered, held;
     bool pressed = ButtonBehavior(bb, id, &hovered, &held, ImGuiButtonFlags_None);
 
     // Render
-    ImU32 bg_col = GetColorU32((held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
+    // ImU32 bg_col = GetColorU32((held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
     ImU32 text_col = GetColorU32(ImGuiCol_Text);
-    ImVec2 center = bb.GetCenter();
-    if (hovered || held)
-        window->DrawList->AddCircleFilled(center/*+ ImVec2(0.0f, -0.5f)*/, g.FontSize * 0.5f + 1.0f, bg_col, 12);
-    RenderArrow(window->DrawList, bb.Min + g.Style.FramePadding, text_col, window->Collapsed ? ImGuiDir_Right : ImGuiDir_Down, 1.0f);
+    // ImVec2 center = bb.GetCenter();
+
+    // if (hovered || held)
+    //     window->DrawList->AddCircleFilled(center/*+ ImVec2(0.0f, -0.5f)*/, g.FontSize * 0.5f + 1.0f, bg_col, 12);
+    window->DrawList->AddRectFilled(bb.Min, bb.Max, GetColorU32(ImGuiCol_WindowBg));
+    if (held)
+        window->DrawList->AddChicagoRectInner(bb.Min, bb.Max);
+    else
+        window->DrawList->AddChicagoRect(bb.Min, bb.Max);
+
+    RenderArrow(window->DrawList, bb.Min, text_col, window->Collapsed ? ImGuiDir_Right : ImGuiDir_Down, 1.0f);
 
     // Switch to moving the window after mouse is moved beyond the initial drag threshold
     if (IsItemActive() && IsMouseDragging(0))
@@ -934,7 +960,8 @@ bool ImGui::ScrollbarEx(const ImRect& bb_frame, ImGuiID id, ImGuiAxis axis, ImS6
     const bool allow_interaction = (alpha >= 1.0f);
 
     ImRect bb = bb_frame;
-    bb.Expand(ImVec2(-ImClamp(IM_FLOOR((bb_frame_width - 2.0f) * 0.5f), 0.0f, 3.0f), -ImClamp(IM_FLOOR((bb_frame_height - 2.0f) * 0.5f), 0.0f, 3.0f)));
+    // bb.Expand(ImVec2(-ImClamp(IM_FLOOR((bb_frame_width - 2.0f) * 0.5f), 0.0f, 3.0f), -ImClamp(IM_FLOOR((bb_frame_height - 2.0f) * 0.5f), 0.0f, 3.0f)));
+    bb.Expand(ImVec2(-1.0f, -2.0f));
 
     // V denote the main, longer axis of the scrollbar (= height for a vertical scrollbar)
     const float scrollbar_size_v = (axis == ImGuiAxis_X) ? bb.GetWidth() : bb.GetHeight();
@@ -989,6 +1016,19 @@ bool ImGui::ScrollbarEx(const ImRect& bb_frame, ImGuiID id, ImGuiAxis axis, ImS6
     }
 
     // Render
+    ImRect grab_rect;
+    if (axis == ImGuiAxis_X)
+    {
+        grab_rect = ImRect(ImLerp(bb.Min.x, bb.Max.x, grab_v_norm), bb.Min.y, ImLerp(bb.Min.x, bb.Max.x, grab_v_norm) + grab_h_pixels, bb.Max.y);
+    }
+    else
+    {
+        grab_rect = ImRect(bb.Min.x, ImLerp(bb.Min.y, bb.Max.y, grab_v_norm), bb.Max.x, ImLerp(bb.Min.y, bb.Max.y, grab_v_norm) + grab_h_pixels);
+    }
+    window->DrawList->AddRectFilled(grab_rect.Min, grab_rect.Max, GetColorU32(ImGuiCol_WindowBg));
+    window->DrawList->AddChicagoRect(grab_rect.Min, grab_rect.Max);
+
+    /*
     const ImU32 bg_col = GetColorU32(ImGuiCol_ScrollbarBg);
     const ImU32 grab_col = GetColorU32(held ? ImGuiCol_ScrollbarGrabActive : hovered ? ImGuiCol_ScrollbarGrabHovered : ImGuiCol_ScrollbarGrab, alpha);
     window->DrawList->AddRectFilled(bb_frame.Min, bb_frame.Max, bg_col, window->WindowRounding, flags);
@@ -998,6 +1038,7 @@ bool ImGui::ScrollbarEx(const ImRect& bb_frame, ImGuiID id, ImGuiAxis axis, ImS6
     else
         grab_rect = ImRect(bb.Min.x, ImLerp(bb.Min.y, bb.Max.y, grab_v_norm), bb.Max.x, ImLerp(bb.Min.y, bb.Max.y, grab_v_norm) + grab_h_pixels);
     window->DrawList->AddRectFilled(grab_rect.Min, grab_rect.Max, grab_col, style.ScrollbarRounding);
+    */
 
     return held;
 }
@@ -1383,7 +1424,9 @@ void ImGui::SeparatorEx(ImGuiSeparatorFlags flags)
             return;
 
         // Draw
-        window->DrawList->AddLine(ImVec2(bb.Min.x, bb.Min.y), ImVec2(bb.Min.x, bb.Max.y), GetColorU32(ImGuiCol_Separator));
+        // window->DrawList->AddLine(ImVec2(bb.Min.x, bb.Min.y), ImVec2(bb.Min.x, bb.Max.y), GetColorU32(ImGuiCol_Separator));
+        window->DrawList->AddLine(ImVec2(bb.Min.x, bb.Min.y), ImVec2(bb.Min.x, bb.Max.y), GetColorU32(ImGuiCol_ChicagoSeparatorUp));
+        window->DrawList->AddLine(ImVec2(bb.Min.x, bb.Min.y + 1.0f), ImVec2(bb.Min.x, bb.Max.y + 1.0f), GetColorU32(ImGuiCol_ChicagoSeparatorDown));
         if (g.LogEnabled)
             LogText(" |");
     }
@@ -1417,7 +1460,9 @@ void ImGui::SeparatorEx(ImGuiSeparatorFlags flags)
         if (item_visible)
         {
             // Draw
-            window->DrawList->AddLine(bb.Min, ImVec2(bb.Max.x, bb.Min.y), GetColorU32(ImGuiCol_Separator));
+            // window->DrawList->AddLine(bb.Min, ImVec2(bb.Max.x, bb.Min.y), GetColorU32(ImGuiCol_Separator));
+            window->DrawList->AddLine(bb.Min, ImVec2(bb.Max.x, bb.Min.y), GetColorU32(ImGuiCol_ChicagoSeparatorUp));
+            window->DrawList->AddLine(ImVec2(bb.Min.x, bb.Min.y + 1.0f), ImVec2(bb.Max.x, bb.Min.y + 1.0f), GetColorU32(ImGuiCol_ChicagoSeparatorDown));
             if (g.LogEnabled)
                 LogRenderedText(&bb.Min, "--------------------------------\n");
 
@@ -7272,12 +7317,14 @@ bool    ImGui::BeginTabBarEx(ImGuiTabBar* tab_bar, const ImRect& tab_bar_bb, ImG
     window->DC.CursorPos = ImVec2(tab_bar->BarRect.Min.x, tab_bar->BarRect.Max.y + tab_bar->ItemSpacingY);
 
     // Draw separator
-    const ImU32 col = GetColorU32((flags & ImGuiTabBarFlags_IsFocused) ? ImGuiCol_TabActive : ImGuiCol_TabUnfocusedActive);
+    // const ImU32 col = GetColorU32((flags & ImGuiTabBarFlags_IsFocused) ? ImGuiCol_TabActive : ImGuiCol_TabUnfocusedActive);
     const float y = tab_bar->BarRect.Max.y - 1.0f;
     {
         const float separator_min_x = tab_bar->BarRect.Min.x - IM_FLOOR(window->WindowPadding.x * 0.5f);
         const float separator_max_x = tab_bar->BarRect.Max.x + IM_FLOOR(window->WindowPadding.x * 0.5f);
-        window->DrawList->AddLine(ImVec2(separator_min_x, y), ImVec2(separator_max_x, y), col, 1.0f);
+        // window->DrawList->AddLine(ImVec2(separator_min_x, y), ImVec2(separator_max_x, y), col, 1.0f);
+        window->DrawList->AddLine(ImVec2(separator_min_x, y), ImVec2(separator_max_x, y), GetColorU32(ImGuiCol_ChicagoSeparatorUp), 1.0f);
+        window->DrawList->AddLine(ImVec2(separator_min_x, y + 1), ImVec2(separator_max_x, y + 1), GetColorU32(ImGuiCol_ChicagoSeparatorDown), 1.0f);
     }
     return true;
 }
@@ -7955,7 +8002,7 @@ bool    ImGui::TabItemEx(ImGuiTabBar* tab_bar, const char* label, bool* p_open, 
     tab->BeginOrder = tab_bar->TabsActiveCount++;
 
     const bool tab_bar_appearing = (tab_bar->PrevFrameVisible + 1 < g.FrameCount);
-    const bool tab_bar_focused = (tab_bar->Flags & ImGuiTabBarFlags_IsFocused) != 0;
+    // const bool tab_bar_focused = (tab_bar->Flags & ImGuiTabBarFlags_IsFocused) != 0;
     const bool tab_appearing = (tab->LastFrameVisible + 1 < g.FrameCount);
     const bool is_tab_button = (flags & ImGuiTabItemFlags_Button) != 0;
     tab->LastFrameVisible = g.FrameCount;
@@ -8070,8 +8117,25 @@ bool    ImGui::TabItemEx(ImGuiTabBar* tab_bar, const char* label, bool* p_open, 
 
     // Render tab shape
     ImDrawList* display_draw_list = window->DrawList;
-    const ImU32 tab_col = GetColorU32((held || hovered) ? ImGuiCol_TabHovered : tab_contents_visible ? (tab_bar_focused ? ImGuiCol_TabActive : ImGuiCol_TabUnfocusedActive) : (tab_bar_focused ? ImGuiCol_Tab : ImGuiCol_TabUnfocused));
+    // const ImU32 tab_col = GetColorU32((held || hovered) ? ImGuiCol_TabHovered : tab_contents_visible ? (tab_bar_focused ? ImGuiCol_TabActive : ImGuiCol_TabUnfocusedActive) : (tab_bar_focused ? ImGuiCol_Tab : ImGuiCol_TabUnfocused));
+    const ImU32 tab_col = GetColorU32(ImGuiCol_WindowBg);
     TabItemBackground(display_draw_list, bb, flags, tab_col);
+    if (tab_contents_visible)
+    {
+        display_draw_list->AddRectFilled(ImVec2(bb.Min.x - 1.0f, bb.Max.y - 1.0f), ImVec2(bb.Max.x, bb.Max.y + 1.0f), GetColorU32(ImGuiCol_WindowBg));
+
+        display_draw_list->PathLineTo(ImVec2(bb.Min.x + 0.5f, bb.Max.y));
+        display_draw_list->PathLineTo(ImVec2(bb.Min.x + 0.5f, bb.Max.y - 1.0f));
+        display_draw_list->PathStroke(GetColorU32(ImGuiCol_ChicagoFrameTopLeftInner), 0, 1.0f);
+
+        display_draw_list->PathLineTo(ImVec2(bb.Min.x - 0.5f, bb.Max.y));
+        display_draw_list->PathLineTo(ImVec2(bb.Min.x - 0.5f, bb.Max.y - 1.0f));
+        display_draw_list->PathStroke(GetColorU32(ImGuiCol_ChicagoFrameTopLeft), 0, 1.0f);
+
+        display_draw_list->PathLineTo(ImVec2(bb.Max.x - 0.5f, bb.Max.y));
+        display_draw_list->PathLineTo(ImVec2(bb.Max.x - 0.5f, bb.Max.y - 1.0f));
+        display_draw_list->PathStroke(GetColorU32(ImGuiCol_ChicagoFrameButtomRightInner), 0, 1.0f);
+    }
     RenderNavHighlight(bb, id);
 
     // Select with right mouse button. This is so the common idiom for context menu automatically highlight the current widget.
@@ -8150,7 +8214,7 @@ void ImGui::TabItemBackground(ImDrawList* draw_list, const ImRect& bb, ImGuiTabI
     IM_UNUSED(flags);
     IM_ASSERT(width > 0.0f);
     const float rounding = ImMax(0.0f, ImMin((flags & ImGuiTabItemFlags_Button) ? g.Style.FrameRounding : g.Style.TabRounding, width * 0.5f - 1.0f));
-    const float y1 = bb.Min.y + 1.0f;
+    const float y1 = bb.Min.y + 0.5f;
     const float y2 = bb.Max.y - 1.0f;
     draw_list->PathLineTo(ImVec2(bb.Min.x, y2));
     draw_list->PathArcToFast(ImVec2(bb.Min.x + rounding, y1 + rounding), rounding, 6, 9);
@@ -8159,11 +8223,32 @@ void ImGui::TabItemBackground(ImDrawList* draw_list, const ImRect& bb, ImGuiTabI
     draw_list->PathFillConvex(col);
     if (g.Style.TabBorderSize > 0.0f)
     {
+        /*
         draw_list->PathLineTo(ImVec2(bb.Min.x + 0.5f, y2));
         draw_list->PathArcToFast(ImVec2(bb.Min.x + rounding + 0.5f, y1 + rounding + 0.5f), rounding, 6, 9);
         draw_list->PathArcToFast(ImVec2(bb.Max.x - rounding - 0.5f, y1 + rounding + 0.5f), rounding, 9, 12);
         draw_list->PathLineTo(ImVec2(bb.Max.x - 0.5f, y2));
         draw_list->PathStroke(GetColorU32(ImGuiCol_Border), 0, g.Style.TabBorderSize);
+        */
+
+        draw_list->PathLineTo(ImVec2(bb.Min.x - 0.5f, y2));
+        draw_list->PathArcToFast(ImVec2(bb.Min.x + rounding - 0.5f, y1 + rounding - 1.0f), rounding, 6, 9);
+        draw_list->PathArcToFast(ImVec2(bb.Max.x - rounding + 0.5f, y1 + rounding - 1.0f), rounding, 9, 12);
+        draw_list->PathStroke(GetColorU32(ImGuiCol_ChicagoFrameTopLeft), 0, 1.0f);
+
+        //draw_list->PathLineTo(ImVec2(bb.Max.x + 0.5f, y1));
+        draw_list->PathArcToFast(ImVec2(bb.Max.x - rounding + 0.5f, y1 + rounding - 1.0f), rounding, 9, 12);
+        draw_list->PathLineTo(ImVec2(bb.Max.x + 0.5f, y2));
+        draw_list->PathStroke(GetColorU32(ImGuiCol_ChicagoFrameButtomRight), 0, 1.0f);
+
+        draw_list->PathLineTo(ImVec2(bb.Min.x + 0.5f, y2));
+        draw_list->PathLineTo(ImVec2(bb.Min.x + 0.5f, y1));
+        draw_list->PathLineTo(ImVec2(bb.Max.x - 0.5f, y1));
+        draw_list->PathStroke(GetColorU32(ImGuiCol_ChicagoFrameTopLeftInner), 0, 1.0f);
+
+        draw_list->PathLineTo(ImVec2(bb.Max.x - 0.5f, y1));
+        draw_list->PathLineTo(ImVec2(bb.Max.x - 0.5f, y2));
+        draw_list->PathStroke(GetColorU32(ImGuiCol_ChicagoFrameButtomRightInner), 0, 1.0f);
     }
 }
 
@@ -8202,7 +8287,8 @@ void ImGui::TabItemLabelAndCloseButton(ImDrawList* draw_list, const ImRect& bb, 
     }
 
     const float button_sz = g.FontSize;
-    const ImVec2 button_pos(ImMax(bb.Min.x, bb.Max.x - frame_padding.x * 2.0f - button_sz), bb.Min.y);
+    // const ImVec2 button_pos(ImMax(bb.Min.x, bb.Max.x - frame_padding.x * 2.0f - button_sz), bb.Min.y);
+    const ImVec2 button_pos(ImMax(bb.Min.x, bb.Max.x - frame_padding.x - button_sz), bb.Min.y + frame_padding.y);
 
     // Close Button & Unsaved Marker
     // We are relying on a subtle and confusing distinction between 'hovered' and 'g.HoveredId' which happens because we are using ImGuiButtonFlags_AllowOverlapMode + SetItemAllowOverlap()
